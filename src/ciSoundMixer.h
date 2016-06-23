@@ -34,10 +34,7 @@ public:
     ciSoundMixer();
     ~ciSoundMixer();
     
-    void load(std::string soundID) override;
-    void unload(std::string soundID) override;
-    
-    void update(float timeDelta=0) override;
+    virtual void update(float timeDelta=0) override;
     
 protected:
 

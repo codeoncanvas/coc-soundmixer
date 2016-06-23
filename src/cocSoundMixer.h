@@ -36,7 +36,7 @@ public:
         soundPath = "";
         soundID = "";
         
-        bLoaded = false;
+        bLoad = false;
         bPlay = false;
         bPause = false;
         bLoop = false;
@@ -54,11 +54,11 @@ public:
         panning = 0.5;
         panningShape.push_back(SoundPoint(panning));
     }
-
+    
     std::string soundPath;
     std::string soundID;
     
-    Value<bool> bLoaded;
+    Value<bool> bLoad;
     Value<bool> bPlay;
     Value<bool> bPause;
     Value<bool> bLoop;
@@ -110,6 +110,9 @@ protected:
 
     virtual SoundItem * initSound();
     virtual void killSound(SoundItem * sound);
+    
+    virtual void updateVolume(SoundItem & sound);
+    virtual void updatePanning(SoundItem & sound);
     
     SoundItem * getSoundPtr(std::string soundID);
     

@@ -45,11 +45,19 @@ void SoundMixer::removeSound(std::string soundID) {
 
 //--------------------------------------------------------------
 void SoundMixer::load(std::string soundID) {
-    // override
+    SoundItem * sound = getSoundPtr(soundID);
+    if(sound == NULL) {
+        return;
+    }
+    sound->bLoad = true;
 }
 
 void SoundMixer::unload(std::string soundID) {
-    // override
+    SoundItem * sound = getSoundPtr(soundID);
+    if(sound == NULL) {
+        return;
+    }
+    sound->bLoad = false;
 }
 
 //--------------------------------------------------------------
@@ -115,83 +123,73 @@ void SoundMixer::pause(std::string soundID) {
 
 //--------------------------------------------------------------
 void SoundMixer::update(float timeDelta) {
+    // override.
+}
 
-    for(int i=0; i<sounds.size(); i++) {
-        SoundItem & sound = (SoundItem &)*sounds[i];
+void SoundMixer::updateVolume(SoundItem & sound) {
+
+    float volume = masterVolume;
+
+    int numOfVolumePoints = sound.volumeShape.size();
+    for(int i=0; i<numOfVolumePoints; i++) {
+        if(numOfVolumePoints == 1) {
+            volume *= sound.volumeShape[0].value;
+            break;
+        }
         
-        if(sound.bLoaded == false) {
+        if(i == numOfVolumePoints-1) {
+            break;
+        }
+        
+        SoundPoint & p0 = sound.volumeShape[i+0];
+        SoundPoint & p1 = sound.volumeShape[i+1];
+        
+        bool bInRange = true;
+        bInRange = bInRange && (sound.progress >= p0.position);
+        bInRange = bInRange && (sound.progress <= p1.position);
+        if(bInRange == false) {
             continue;
         }
         
-        sound.bPlay.update();
-        sound.bLoop.update();
+        volume *= coc::map(sound.progress, p0.position, p1.position, p0.value, p1.value);
         
-        float volume = masterVolume;
-        float panning = masterPanning;
+        break;
+    }
+
+    sound.volume = volume;
+    sound.volume.update();
+}
+
+void SoundMixer::updatePanning(SoundItem & sound) {
+
+    float panning = masterPanning;
     
-        sound.timeCurrent.update();
-        if(sound.timeCurrent.hasChanged()) {
-        
-            sound.progress = coc::map(sound.timeCurrent, 0.0, sound.timeDuration, 0.0, 1.0, true);
-            sound.progress.update();
-            
-            int numOfVolumePoints = sound.volumeShape.size();
-            for(int i=0; i<numOfVolumePoints; i++) {
-                if(numOfVolumePoints == 1) {
-                    volume *= sound.volumeShape[0].value;
-                    break;
-                }
-                
-                if(i == numOfVolumePoints-1) {
-                    break;
-                }
-                
-                SoundPoint & p0 = sound.volumeShape[i+0];
-                SoundPoint & p1 = sound.volumeShape[i+1];
-                
-                bool bInRange = true;
-                bInRange = bInRange && (sound.progress >= p0.position);
-                bInRange = bInRange && (sound.progress <= p1.position);
-                if(bInRange == false) {
-                    continue;
-                }
-                
-                volume *= coc::map(sound.progress, p0.position, p1.position, p0.value, p1.value);
-                
-                break;
-            }
-            
-            int numOfPanningPoints = sound.panningShape.size();
-            for(int i=0; i<numOfPanningPoints; i++) {
-                if(numOfPanningPoints == 1) {
-                    panning *= sound.panningShape[0].value;
-                    break;
-                }
-                
-                if(i == numOfPanningPoints-1) {
-                    break;
-                }
-                
-                SoundPoint & p0 = sound.panningShape[i+0];
-                SoundPoint & p1 = sound.panningShape[i+1];
-                
-                bool bInRange = true;
-                bInRange = bInRange && (sound.progress >= p0.position);
-                bInRange = bInRange && (sound.progress <= p1.position);
-                if(bInRange == false) {
-                    continue;
-                }
-                
-                panning *= coc::map(sound.progress, p0.position, p1.position, p0.value, p1.value);
-            }
+    int numOfPanningPoints = sound.panningShape.size();
+    for(int i=0; i<numOfPanningPoints; i++) {
+        if(numOfPanningPoints == 1) {
+            panning *= sound.panningShape[0].value;
+            break;
         }
         
-        sound.volume = volume;
-        sound.volume.update();
+        if(i == numOfPanningPoints-1) {
+            break;
+        }
         
-        sound.panning = panning;
-        sound.panning.update();
+        SoundPoint & p0 = sound.panningShape[i+0];
+        SoundPoint & p1 = sound.panningShape[i+1];
+        
+        bool bInRange = true;
+        bInRange = bInRange && (sound.progress >= p0.position);
+        bInRange = bInRange && (sound.progress <= p1.position);
+        if(bInRange == false) {
+            continue;
+        }
+        
+        panning *= coc::map(sound.progress, p0.position, p1.position, p0.value, p1.value);
     }
+    
+    sound.panning = panning;
+    sound.panning.update();
 }
 
 //--------------------------------------------------------------
