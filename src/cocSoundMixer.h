@@ -42,27 +42,14 @@ class SoundItem {
 
 public:
 
-    SoundItem() {
+    SoundItem() :
+    soundPath(""), soundID(""),
+    bLoad(false), bPlay(false), bPause(false), bLoop(false),
+    timeCurrent(0.0), timeDuration(0.0), progress(0.0),
+    numOfTimesPlayed(0), numOfTimesToPlay(1),
+    volume(1.0), panning(0.5) {
         
-        soundPath = "";
-        soundID = "";
-        
-        bLoad = false;
-        bPlay = false;
-        bPause = false;
-        bLoop = false;
-        
-        timeCurrent = 0;
-        timeDuration = 0;
-        progress = 0;
-
-        numOfTimesPlayed = 0;
-        numOfTimesToPlay = 1;
-        
-        volume = 1.0;
         volumeShape.push_back(SoundPoint(volume));
-        
-        panning = 0.5;
         panningShape.push_back(SoundPoint(panning));
     }
     

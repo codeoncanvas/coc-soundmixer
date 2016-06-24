@@ -33,8 +33,9 @@ public:
             //
     }
     
-    ci::audio::SourceFileRef soundFileRef;
-    ci::audio::VoiceRef soundRef;
+    ci::audio::SourceFileRef sourceFileRef;
+    ci::audio::VoiceSamplePlayerNodeRef voiceSamplePlayerNodeRef;
+    ci::audio::SamplePlayerNodeRef samplePlayerNodeRef;
 };
 
 //--------------------------------------------------------------

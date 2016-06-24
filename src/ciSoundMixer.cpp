@@ -46,21 +46,37 @@ void ciSoundMixer::update(float timeDelta) {
             
             if(sound.bLoad) {
             
-                sound.soundFileRef = ci::audio::load(ci::app::loadAsset(sound.soundPath));
-                sound.soundRef = ci::audio::Voice::create(sound.soundFileRef);
-                sound.timeDuration = sound.soundFileRef->getNumSeconds();
+                sound.sourceFileRef = ci::audio::load(ci::app::loadAsset(sound.soundPath));
+                sound.voiceSamplePlayerNodeRef = ci::audio::Voice::create(sound.sourceFileRef);
+                sound.samplePlayerNodeRef = sound.voiceSamplePlayerNodeRef->getSamplePlayerNode();
+                
+                float duration = sound.samplePlayerNodeRef->getNumSeconds();
+                sound.timeDuration = duration;
+                sound.timeDuration.update();
             
             } else {
             
-                sound.soundRef = NULL;
-                sound.soundFileRef = NULL;
-                sound.bLoad = false;
+                sound.samplePlayerNodeRef = NULL;
+                sound.voiceSamplePlayerNodeRef = NULL;
+                sound.sourceFileRef = NULL;
+                
                 sound.bPlay = false;
+                sound.bPlay.update();
+                
                 sound.bPause = false;
-                sound.timeCurrent = 0;
-                sound.timeDuration = 0;
-                sound.progress = 0;
+                sound.bPause.update();
+                
+                sound.timeCurrent = 0.0;
+                sound.timeCurrent.update();
+                
+                sound.timeDuration = 0.0;
+                sound.timeDuration.update();
+                
+                sound.progress = 0.0;
+                sound.progress.update();
+                
                 sound.numOfTimesPlayed = 0;
+                sound.numOfTimesPlayed.update();
             }
         }
         
@@ -72,11 +88,11 @@ void ciSoundMixer::update(float timeDelta) {
             
             if(sound.bPlay) {
             
-                sound.soundRef->start();
+                sound.voiceSamplePlayerNodeRef->start();
             
             } else {
             
-                sound.soundRef->stop();
+                sound.voiceSamplePlayerNodeRef->stop();
             }
         }
         
@@ -84,33 +100,67 @@ void ciSoundMixer::update(float timeDelta) {
         
             if(sound.bPause) {
             
-                sound.soundRef->pause();
+                sound.voiceSamplePlayerNodeRef->pause();
             
             } else {
             
-                sound.soundRef->start();
+                sound.voiceSamplePlayerNodeRef->start();
             }
         }
         
-        sound.timeCurrent = sound.soundFileRef->getReadPositionSeconds();
-        sound.timeCurrent.update();
-        if(sound.timeCurrent.hasChanged()) {
+        float progress = sound.samplePlayerNodeRef->getReadPosition() / (float)sound.samplePlayerNodeRef->getNumFrames();
+        sound.progress = progress;
+        sound.progress.update();
         
-            sound.progress = coc::map(sound.timeCurrent, 0.0, sound.timeDuration, 0.0, 1.0, true);
-            sound.progress.update();
+        if(sound.progress.hasChanged()) {
+
+            sound.timeCurrent = coc::map(sound.progress, 0.0, 1.0, 0.0, sound.timeDuration, true);
+            sound.timeCurrent.update();
             
             updateVolume(sound);
+            if(sound.volume.hasChanged()) {
+                sound.voiceSamplePlayerNodeRef->setVolume(sound.volume);
+            }
+
             updatePanning(sound);
+            if(sound.panning.hasChanged()) {
+                sound.voiceSamplePlayerNodeRef->setPan(sound.panning);
+            }
         }
         
-        if(sound.volume.hasChanged()) {
-        
-            sound.soundRef->setVolume(sound.volume);
-        }
-        
-        if(sound.panning.hasChanged()) {
-        
-            sound.soundRef->setPan(sound.panning);
+        bool bFinished = true;
+        bFinished = bFinished && (sound.bPlay == true);
+        bFinished = bFinished && (sound.progress == 1.0f);
+        bFinished = bFinished && (sound.progress.hasChanged() == false);
+        if(bFinished == true) {
+            
+            sound.samplePlayerNodeRef->seek(0);
+            
+            sound.timeCurrent = 0.0;
+            sound.timeCurrent.update();
+            
+            sound.progress = 0.0;
+            sound.progress.update();
+            
+            sound.numOfTimesPlayed = sound.numOfTimesPlayed + 1;
+            
+            bool bPlayAgain = true;
+            bPlayAgain = bPlayAgain && (sound.bLoop == true);
+            bPlayAgain = bPlayAgain && (sound.numOfTimesPlayed < sound.numOfTimesToPlay);
+            if(bPlayAgain == true) {
+            
+                sound.voiceSamplePlayerNodeRef->start();
+            
+            } else {
+            
+                sound.voiceSamplePlayerNodeRef->stop();
+                
+                sound.bPlay = false;
+                sound.bPlay.update();
+                
+                sound.numOfTimesPlayed = 0;
+                sound.numOfTimesPlayed.update();
+            }
         }
     }
 }
