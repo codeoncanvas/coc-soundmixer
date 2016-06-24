@@ -119,13 +119,4 @@ protected:
     std::vector<SoundItem *> sounds;
 };
 
-//--------------------------------------------------------------
-static SoundMixer & soundMixer() {
-    SoundMixer * _soundMixerInstance = NULL;
-    if(_soundMixerInstance == NULL) {
-        _soundMixerInstance = new SoundMixer();
-    }
-    return *_soundMixerInstance;
-}
-
 };
