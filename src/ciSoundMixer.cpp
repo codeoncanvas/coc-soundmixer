@@ -18,6 +18,7 @@
  **/
 
 #include "ciSoundMixer.h"
+#include "cinder/app/App.h"
 #include "cinder/audio/audio.h"
 
 namespace coc {
